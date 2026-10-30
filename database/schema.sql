@@ -159,6 +159,24 @@ CREATE INDEX idx_payment_bill ON payment(bill_id);
 CREATE INDEX idx_settlement_cycle ON settlement(cycle_id, status);
 CREATE INDEX idx_embedding_cosine ON doc_embedding USING hnsw (embedding vector_cosine_ops);
 
+-- Covering indexes for the remaining foreign keys. PostgreSQL does not index a
+-- foreign key automatically: without these, the balance view and snapshot joins
+-- fall back to sequential scans, and deleting a parent row has to scan the child.
+CREATE INDEX idx_occupancy_occupant ON occupancy(occupant_id);
+CREATE INDEX idx_expense_household ON expense(household_id, expense_date DESC);
+CREATE INDEX idx_expense_payer ON expense(paid_by_occupant_id);
+CREATE INDEX idx_breakdown_slab ON bill_slab_breakdown(slab_rate_id);
+CREATE INDEX idx_bill_share_occupant ON bill_share(occupant_id);
+CREATE INDEX idx_expense_share_occupant ON expense_share(occupant_id);
+CREATE INDEX idx_payment_expense ON payment(expense_id);
+CREATE INDEX idx_payment_occupant ON payment(occupant_id);
+CREATE INDEX idx_settlement_payer ON settlement(payer_occupant_id);
+CREATE INDEX idx_settlement_payee ON settlement(payee_occupant_id);
+CREATE INDEX idx_app_user_role ON app_user(role_id);
+CREATE INDEX idx_receipt_expense ON receipt(expense_id);
+CREATE INDEX idx_receipt_bill ON receipt(bill_id);
+CREATE INDEX idx_audit_entity ON audit_log(entity_name, entity_id, changed_at DESC);
+
 CREATE OR REPLACE FUNCTION occupancy_days(p_occupancy occupancy, p_start DATE, p_end DATE)
 RETURNS INTEGER LANGUAGE sql IMMUTABLE AS $$
   SELECT GREATEST(0, LEAST(COALESCE((p_occupancy).move_out_date,p_end),p_end) - GREATEST((p_occupancy).move_in_date,p_start) + 1)
