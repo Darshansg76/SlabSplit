@@ -1,0 +1,24 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: slabsplit
+      POSTGRES_USER: slabsplit
+      POSTGRES_PASSWORD: slabsplit
+    ports:
+      - "55432:5432"
+    volumes:
+      - slabsplit_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U slabsplit"]
+      interval: 5s
+      retries: 10
+  embeddings:
+    build: ./embedding-service
+    ports:
+      - "8001:8001"
+    environment:
+      MODEL_NAME: sentence-transformers/all-MiniLM-L6-v2
+volumes:
+  slabsplit_data:

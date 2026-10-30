@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.env.local
+.analysis/
+.npm-cache/
+.next-swc/
+public/uploads/
+tmp/
+.local-postgres/
+*.log
+.~lock.*#
