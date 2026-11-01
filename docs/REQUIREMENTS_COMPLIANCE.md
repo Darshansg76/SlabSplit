@@ -8,7 +8,7 @@ repository that satisfies it, so a reviewer can verify the claim instead of taki
 | # | Requirement | Status | Where |
 |---|-------------|:------:|-------|
 | 1 | Unique title, real-world problem, **not simple CRUD** | ✅ | Slab tariff tiers, day-weighted proration for mid-cycle move-ins, and minimum-transfer settlement are real computation — `lib/calculation.js`, `lib/logic.js` |
-| 2 | 2-member team with defined responsibilities | 👥 | Record each member's actual work; see note below |
+| 2 | 2-member team with defined responsibilities | ✅ | `docs/CONTRIBUTIONS.md` — responsibilities per member, each spanning database **and** application work, with commit hashes as evidence |
 | 3 | **SQL + a second paradigm** (min 2) | ✅ | PostgreSQL (relational core) + **pgvector** (`doc_embedding`, HNSW cosine index). Justified in `README.md` → *Stack and database choice* |
 | 4 | ER diagram, relational schema, PK/FK/relationships/constraints; vector data model | ✅ | ER: `docs/PROJECT.md` (Mermaid). Relational schema: `docs/diagrams/slabsplit_relational.svg`. Vector model: `README.md` + `doc_embedding` |
 | 5 | **DDL**: CREATE, ALTER, DROP, keys, constraints, indexes, views | ✅ | `database/schema.sql` (17 tables, 26 FKs, 22 indexes, 2 views); `database/ddl_demo.sql` demonstrates reversible ALTER/DROP |

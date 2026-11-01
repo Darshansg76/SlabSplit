@@ -62,7 +62,7 @@ The 16 entities in the PDF are `household`, `occupant`, `occupancy`, `bill_cycle
   ```
 - **ER diagram:** the Mermaid diagram in `docs/PROJECT.md`, which GitHub renders inline and which already includes `bill_share`.
 
-`docs/REQUIREMENTS_COMPLIANCE.md` maps every numbered course requirement to the file that satisfies it, with SQL a reviewer can run to verify the object counts.
+`docs/REQUIREMENTS_COMPLIANCE.md` maps every numbered course requirement to the file that satisfies it, with SQL a reviewer can run to verify the object counts. `docs/CONTRIBUTIONS.md` records which teammate did what, with commit hashes.
 
 This repository contains the application and database implementation. For the final course submission, add screenshots captured from a running instance and your manual test results — those cannot be honestly invented here. Commit each teammate's work under their own Git identity so the history shows individual contributions.
 
