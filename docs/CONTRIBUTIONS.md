@@ -7,8 +7,8 @@ are the evidence, and `git log` / `git shortlog -sne` confirm them.
 
 | | Member A | Member B |
 |---|---|---|
-| **Name** | Dhanush S | Darshan *(fill in full name)* |
-| **SRN** | PES1UG24AM360 | *(fill in)* |
+| **Name** | Dhanush S | Darshan Govekar |
+| **SRN** | PES1UG24AM360 | PES1UG24AM355 |
 | **GitHub** | `dhanushs1912-svg` | `Darshansg76` |
 
 ## Member B — Darshan — application and initial database implementation
@@ -66,7 +66,6 @@ are the evidence, and `git log` / `git shortlog -sne` confirm them.
 Problem statement, entity and relationship design, the choice of PostgreSQL + pgvector
 and its justification, the demo walkthrough, and final testing were agreed jointly.
 
-> **Before submitting:** fill in Darshan's full name and SRN above, and add any commits
-> made after this file was written. Keep committing under your own Git identities —
+> **Before submitting:** add any commits made after this file was written. Keep committing under your own Git identities —
 > `git shortlog -sne` is the quickest way for an evaluator to check this, and it should
 > show both of you.

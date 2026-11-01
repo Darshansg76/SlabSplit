@@ -52,9 +52,15 @@ erDiagram
   expense ||--o{ receipt : documents
   app_user ||--o{ receipt : uploads
   app_user ||--o{ audit_log : acts
+  doc_embedding {
+    bigint embedding_id PK
+    string source_type
+    bigint source_id
+    vector embedding
+  }
 ```
 
-`doc_embedding` links to an expense or receipt through `(source_type, source_id)` because its source is polymorphic. The application validates that link before indexing. This diagram adds `bill_share` to the relational model depicted in the original PDF.
+`doc_embedding` is drawn standalone, with no relationship line, because its source is polymorphic: `(source_type, source_id)` points at an expense or a receipt, so no single foreign key can express it. The application validates that link before indexing. Every other entity here carries real foreign keys, so this diagram and `docs/diagrams/slabsplit_relational.svg` describe the same 17 tables and the same relationships. This diagram adds `bill_share` to the relational model depicted in the original PDF.
 
 ## Relational schema and data dictionary
 
