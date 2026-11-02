@@ -144,3 +144,19 @@ project folder, is:
 ```powershell
 npm.cmd run demo
 ```
+
+## Subsequent report screenshot run
+
+On 2 November 2026, the requested application views were captured and visually
+reviewed using an isolated headless Chrome session after the native desktop
+capture helper remained unavailable. This later run verifies the presentation of
+the listed views, including real admin/member browser sign-in, the bill and
+shares, settlement completion and zero outstanding balances, both search modes,
+reports and audit history. It does not replace the separate registration and
+password API/integration tests with a claim about unperformed browser workflows.
+
+The [screenshot index](screenshots/README.md) records captions, capture provenance,
+the separate report household, and preservation of the earlier records. The
+test-output image is explicitly a rendering of actual command output, and its raw
+transcript is included. The original PDF and database command files are unchanged.
+See also [viva notes on the lock and receipt storage](VIVA_LOCKS_AND_RECEIPTS.md).

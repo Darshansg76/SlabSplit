@@ -1,0 +1,24 @@
+
+> slabsplit-dbms@0.1.0 test
+> node --test tests/*.test.mjs
+
+✔ three paise shared by six people never creates a negative remainder (2.1592ms)
+✔ largest remainders and identity tie-breaks are stable under reordering (2.4951ms)
+✔ allocation conserves every amount across varied group sizes and decimal weights (15.995ms)
+✔ allocation rejects invalid totals and weights (0.6286ms)
+✔ money input uses exact paise and rejects unsupported precision and nonpositive payments (0.5057ms)
+✔ October demo combines three slabs and distributes exactly 1220 rupees (2.0523ms)
+✔ a gap in slab coverage is rejected (0.4139ms)
+✔ settlement search finds fewer transfers than a greedy pairing (1.3026ms)
+✔ original PDF and SQL command content is unchanged (SQL checkout line endings are ignored) (8.8438ms)
+✔ an invitation is bound to its occupant, email, signature, and expiry (2.3026ms)
+✔ receipt paths reject traversal, external URLs, and extra path segments (0.9027ms)
+✔ receipt format is detected from bytes rather than the browser MIME label (0.2259ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 125.7017
