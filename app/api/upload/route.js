@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sessionFromRequest } from '../../../lib/auth';
-import { writeFile, mkdir } from 'node:fs/promises';
-import { randomUUID } from 'node:crypto';
-import path from 'node:path';
+import { saveReceiptFile, MAX_RECEIPT_BYTES } from '../../../lib/receipts';
 
 export const runtime = 'nodejs';
 export async function POST(request) {
@@ -12,14 +10,9 @@ export async function POST(request) {
     const form=await request.formData();
     const file=form.get('file');
     if(!file || typeof file.arrayBuffer!=='function') return NextResponse.json({error:'Choose a file'},{status:400});
-    const types={'application/pdf':'.pdf','image/jpeg':'.jpg','image/png':'.png'};
-    const ext=types[file.type];
-    if(!ext||file.size>5*1024*1024) return NextResponse.json({error:'Use a PDF, JPEG, or PNG under 5 MB'},{status:400});
-    const dir=path.join(process.cwd(),'public','uploads');
-    await mkdir(dir,{recursive:true});
-    const name=randomUUID()+ext;
-    await writeFile(path.join(dir,name),Buffer.from(await file.arrayBuffer()),{flag:'wx'});
-    return NextResponse.json({file_url:`/uploads/${name}`});
+    if(file.size>MAX_RECEIPT_BYTES) return NextResponse.json({error:'Use a PDF, JPEG, or PNG under 5 MB'},{status:400});
+    const file_url=await saveReceiptFile(Buffer.from(await file.arrayBuffer()));
+    return NextResponse.json({file_url});
   } catch {
     // A malformed multipart body or an unwritable uploads folder must still answer
     // JSON: the browser form only knows how to read {error}, not an HTML 500 page.

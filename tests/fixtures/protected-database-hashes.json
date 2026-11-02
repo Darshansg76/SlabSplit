@@ -1,0 +1,6 @@
+{
+  "DBMS Mini Project.pdf": {"rawSha256":"d565fdc33ed920fb82982902c80947b56e5099d5224433d93a9af2b0bd5d7fe7"},
+  "database/schema.sql": {"rawSha256":"d377d6fb1cd08f0ab0335768bec2fe8b9a00561ecc9fc50797d097ddf2195ef5","lfSha256":"633f40b925242b1dc175f92f09c5f73399cd011eb06be474f8c3d7384bb4fd3e"},
+  "database/queries.sql": {"rawSha256":"9a3c8b85e0becc6aac47a986d9637c37603aefea60f5603a36426dc04628d634","lfSha256":"9a3c8b85e0becc6aac47a986d9637c37603aefea60f5603a36426dc04628d634"},
+  "database/ddl_demo.sql": {"rawSha256":"18bfe8ac04a1dab06eb300d8dd70e5731395c934d717d25299ccdb6f0c52947b","lfSha256":"18bfe8ac04a1dab06eb300d8dd70e5731395c934d717d25299ccdb6f0c52947b"}
+}

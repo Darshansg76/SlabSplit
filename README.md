@@ -13,15 +13,49 @@ The Word guide at `docs/SlabSplit Implementation Documentation.docx` explains th
 
 ## Setup
 
-1. Install Node.js 20.6+ and Docker Desktop with Compose. Start Docker Desktop.
-2. In the project folder, copy `.env.example` to `.env.local` (`Copy-Item .env.example .env.local` in PowerShell, or `cp .env.example .env.local` on macOS/Linux). Edit `.env.local`: choose a `SESSION_SECRET` of at least 32 characters and fill in `DEMO_ADMIN_PASSWORD` and `DEMO_MEMBER_PASSWORD` with passwords of at least eight characters. The example database URL already matches Compose. These settings stay on your laptop because `.env.local` is ignored by Git.
-3. Run `docker compose up -d --build` to start PostgreSQL with pgvector and the embedding service. The database is exposed only for local development on host port `55432`; the embedding service uses `8001`. The first embedding request may take time while MiniLM downloads its model.
-4. Run `npm ci` to install the exact dependency versions in `package-lock.json`.
-5. Run `npm run seed` once to create the demo data and the two accounts. It reads `.env.local` automatically. Repeating the seed against the same database intentionally reports that Demo Flat already exists.
-6. Run `npm run dev` and open `http://localhost:3000`.
-7. Sign in as `admin` or `asha` using the passwords you chose in `.env.local`.
+One-time setup: install Node.js (verified with Node 24) and Docker Desktop with
+Compose, and complete Docker Desktop's initial setup. In PowerShell from the
+project folder, run:
 
-On later starts, run `docker compose up -d` and `npm run dev`; the database data remains in the Compose volume. Docker Desktop and an internet connection are needed for the first image/model download. The Compose database password is a local-demo example; change it together with `DATABASE_URL` before any deployment outside your laptop.
+```powershell
+if (!(Test-Path .env.local)) { Copy-Item .env.example .env.local }
+npm.cmd ci
+```
+
+Edit `.env.local`: choose a random `SESSION_SECRET` of at least 32 characters,
+set both demo passwords to at least eight characters, and keep the database URL
+on the Compose host port `55432`. Set `EMBEDDING_SERVICE_URL=http://127.0.0.1:8001`.
+Preserve existing local configuration and passwords.
+
+**Start everything, including after a Windows restart, with one command:**
+
+```powershell
+npm.cmd run demo
+```
+
+The command finds Docker even when an old VS Code terminal has a stale PATH,
+starts Docker Desktop if needed, starts the PostgreSQL/pgvector and Python
+containers, waits for the database, warms the existing MiniLM model, and starts
+Next.js at **http://127.0.0.1:3000**. It builds the embedding image only when its
+source fingerprint changes or no container image is available. Initial image and
+model downloads require internet. Existing containers keep their model cache;
+recreating the embedding container may require another download.
+
+Demo records are seeded **only when both households and user accounts are empty**.
+An existing database is preserved and skipped; do not run the seed repeatedly.
+The startup lock and app health check avoid duplicate website processes. A port
+already used by another application is reported instead of silently starting on
+another port. Keep the terminal open. Ctrl+C stops the website (answer Y if Windows
+asks to terminate the npm batch job); `docker compose
+stop` stops this project's containers while preserving the database volume.
+
+Sign in as `admin` or `asha` with the passwords already configured in `.env.local`.
+To start just the supporting services for verification, use
+`npm.cmd run demo -- --services-only`.
+
+The Compose database password remains an existing local-demo value. Ports `55432`
+and `8001` are published on the host without an explicit localhost bind in the
+existing Compose file; use this setup only on a trusted development laptop.
 
 The Compose database initializes `database/schema.sql` only when its data volume is new. For an existing local database, run the schema with `psql -f database/schema.sql` on an empty database. `database/queries.sql` contains showcase queries, and `database/ddl_demo.sql` demonstrates reversible ALTER and DROP commands.
 
@@ -43,11 +77,16 @@ The seed has an October 2026 cycle, three occupants (Mira moves in on October 16
 
 - Occupancy periods for the same occupant and household cannot overlap. A cycle uses inclusive start and end dates.
 - Slab rates must start at unit 0, cover all consumed units without gaps, and be effective for the entire cycle. `fixed_charge` is taken from the first slab only.
-- Bill and expense shares are rounded to paise; the last recipient gets the rounding remainder so shares add exactly to the source amount.
+- Bill and expense shares use integer paise. Fractional remainders are ranked and leftover paise are assigned with a stable identity tie-break, so shares stay nonnegative and sum exactly to the source amount.
 - Bill payments credit the occupant who paid the provider. Expenses credit the occupant who paid upfront. Settlements are generated only when bills are fully paid, so cycle balances net to zero. Groups with up to 12 nonzero balances use an exact minimum-transfer search; larger groups use a fast greedy pairing and are labelled accordingly.
 - Admins can manage records and generate settlements. Members can view households where they have occupancy, record only their own bill payments, mark transfers where they are the payer as settled, and change their own password.
-- **Accounts.** Anyone can self-register from the sign-in page; a self-registered account is always a `member`, because the role is never read from the request body. If an admin has already added an occupant with the same email and that occupant has no login yet, registration claims that occupant row instead of creating a duplicate person. Admins can also create accounts directly (choosing the role and the occupant to link) and deactivate accounts, under **Household & people → User accounts**. A new member sees "ask an admin to add you to a household" until an occupancy is assigned.
-- A bill can be deleted by an admin while its cycle is open, which also removes its shares, slab breakdown, recorded payments and any *pending* transfers for that cycle; if settled transfers already exist the deletion is refused, because real money has moved. Deleting the last bill in a cycle returns that cycle to `open`.
+- **Accounts.** Anyone can self-register as a `member`; the request cannot choose an admin role. If an admin already added an occupant with that email, the admin creates an invitation under **Household & people → Invite an existing occupant** and privately gives the code to that person. Registering with the same email and that valid 24-hour code links the existing row without duplication. Knowing an email alone is insufficient. A successful link prevents invitation replay. No extra database table or column is used. Admin-created accounts and deactivation remain available. A new member needs an occupancy assignment before seeing a household.
+- A bill can be deleted by an admin while its cycle is not closed, removing its shares, slab breakdown and recorded provider payments. Pending suggestions are marked `cancelled` and remain visible as history. If any transfer is settled, financial source changes are refused. Deleting the last bill returns the cycle to `open`.
+- Reimbursed expenses cannot be deleted; their payment history is retained. Occupancy changes affecting saved allocations are refused rather than silently rewriting shares. Invalid input or failed operations roll back the entire transaction, including suggestion cancellation.
+- The overview shows original due and outstanding after completed outgoing/incoming transfers. Reimbursements are counted only through the existing payment view. Allocation uses integer-ratio largest remainders with a stable identity tie-break, preserving nonnegative shares and exact totals.
+- Receipt uploads are checked by file signatures and stored outside the public directory in `storage/receipts`. On startup, existing files are moved from `public/uploads` into private storage without overwriting or changing their bytes. Standard `/uploads/<filename>` URLs remain valid through authenticated, household-authorized downloads. Nonstandard legacy entries are preserved in a private import folder for review. Back up receipts separately from PostgreSQL.
+- The audit screen includes bills, expenses, payments, settlements and deleted records when existing JSONB history and parent records identify their household/cycle. It does not change the audit trigger or invent missing historical context.
+- Application mutations take a shared transaction advisory lock. It serializes competing API payments, occupancy inserts, settlement completion and source edits. Direct SQL clients can bypass this protocol; stronger database constraints require approval under the fixed PDF requirements.
 - Sensitive values are read from environment variables. Password hashes, not plaintext passwords, are stored in the database.
 
 ## Schema and deliverables
@@ -66,6 +105,32 @@ The 16 entities in the PDF are `household`, `occupant`, `occupancy`, `bill_cycle
 
 This repository contains the application and database implementation. For the final course submission, add screenshots captured from a running instance and your manual test results — those cannot be honestly invented here. Commit each teammate's work under their own Git identity so the history shows individual contributions.
 
+## Fixed database commands and verification
+
+The original PDF and every existing `database/*.sql` file remain unchanged.
+[PDF comparison and existing differences](docs/PDF_DATABASE_CONTRACT.md) records
+the added table/constraints/objects and the pre-existing named bill-check mismatch.
+The old `.local-postgres` fallback is not the supported vector configuration.
+
+Verification commands:
+
+```powershell
+npm.cmd test
+npm.cmd run test:integration
+npm.cmd run build
+```
+
+Unit/contract tests need no database. Integration tests require the Docker
+services and create an isolated, randomly named verification database using the
+unchanged schema. They exercise real API workflows, inspect committed database
+results, compare downloaded receipt bytes, and rank actual indexed MiniLM
+documents. Every existing application table is fingerprinted before/after, and
+only the disposable test database is removed. Start the app once before testing
+if old public receipt files need importing. See
+[observed results and remaining limitations](docs/REPAIR_VERIFICATION.md).
+
 ## Suggested next increments
 
-Add tariff version editing, receipt OCR, account invitation/password reset, automated test fixtures, and exportable statements after the base demo is reviewed.
+Consider receipt OCR, password reset and exportable statements after the verified
+demo is reviewed. Changes to database definitions need explicit PDF-contract
+approval; application changes should continue to preserve the fixed commands.

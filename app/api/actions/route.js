@@ -8,6 +8,8 @@ export async function POST(request) {
     const user=await sessionFromRequest(request);
     if(!user) return NextResponse.json({error:'Sign in required'},{status:401});
     const input=await request.json();
+    if(user.role!=='admin'&&!['create_payment','settle_own','change_password'].includes(input.action))
+      return NextResponse.json({error:'Admin role required'},{status:403});
     if(user.role==='member' && input.action==='create_payment') {
       if(!input.household_id || !await householdAccess(user,Number(input.household_id)))
         return NextResponse.json({error:'Household access denied'},{status:403});

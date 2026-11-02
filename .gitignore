@@ -1,5 +1,8 @@
 node_modules/
 .next/
+.next-integration/
+storage/receipts/
+.slabsplit-runtime/
 .env.local
 .analysis/
 .npm-cache/

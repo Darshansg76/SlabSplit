@@ -121,7 +121,13 @@ The browser never receives database credentials. `DATABASE_URL`, `SESSION_SECRET
 | Settlement with unpaid bill | API rejects | Requires running web demo |
 | Member editing admin records | API rejects | Requires running web demo |
 
-Application screenshots must be captured from a running database-backed instance before the final course submission. The Next.js build, calculation tests, and HTTP startup check passed here. A pgvector-enabled database and embedding service were not available for an end-to-end integration run, so database cases remain pending rather than marked passed.
+The original table above records the initial implementation's checks. The later
+schema-preserving repairs and observed database-backed results are recorded in
+`docs/REPAIR_VERIFICATION.md`, including bill regeneration, reimbursements,
+completed settlements, registration/linking, receipt authorization, concurrency,
+and real MiniLM retrieval. `docs/PDF_DATABASE_CONTRACT.md` records the original
+PDF comparison and existing schema differences. Application screenshots for the
+final report still need to be captured from the version actually submitted.
 
 ## Team contribution plan
 

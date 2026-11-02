@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { hashPassword, makeSession, sessionCookie } from '../../../lib/auth';
 import { transaction } from '../../../lib/db';
+import { verifyOccupantInvitation } from '../../../lib/invitations';
 
 export const runtime = 'nodejs';
 
@@ -24,13 +25,20 @@ export async function POST(request) {
       // request body, so nobody can sign themselves up as an admin.
       const role=(await client.query("SELECT role_id FROM role WHERE name='member'")).rows[0];
       if(!role) throw new Error('Member role is missing. Load database/schema.sql first.');
-      // If an admin already added this person as an occupant, claim that row instead
-      // of creating a duplicate; otherwise register them as a new occupant.
-      let occupant=(await client.query(`SELECT o.occupant_id FROM occupant o
-        LEFT JOIN app_user u ON u.occupant_id=o.occupant_id
-        WHERE lower(o.email)=$1 AND u.user_id IS NULL`,[email])).rows[0];
-      if(!occupant) occupant=(await client.query(
-        'INSERT INTO occupant(name,email) VALUES($1,$2) RETURNING occupant_id',[name,email])).rows[0];
+      if((await client.query('SELECT 1 FROM app_user WHERE lower(email)=$1 OR username=$2',[email,username])).rowCount)
+        throw new Error('That username or email is already registered');
+      const matches=(await client.query('SELECT * FROM occupant WHERE lower(email)=$1 FOR UPDATE',[email])).rows;
+      if(matches.length>1) throw new Error('Ask an admin to resolve duplicate occupant email records before linking.');
+      let occupant=matches[0];
+      if(occupant) {
+        if(!occupant.is_active) throw new Error('Ask an admin to reactivate this occupant before linking.');
+        verifyOccupantInvitation(body.invitation,occupant);
+        if((await client.query('SELECT 1 FROM app_user WHERE occupant_id=$1',[occupant.occupant_id])).rowCount)
+          throw new Error('That occupant already has an account');
+      } else {
+        if(body.invitation) throw new Error('The invitation does not match this email.');
+        occupant=(await client.query('INSERT INTO occupant(name,email) VALUES($1,$2) RETURNING occupant_id',[name,email])).rows[0];
+      }
       return (await client.query(`INSERT INTO app_user(occupant_id,role_id,username,email,password_hash)
         VALUES($1,$2,$3,$4,$5) RETURNING user_id,username,occupant_id`,
         [occupant.occupant_id,role.role_id,username,email,hashPassword(password)])).rows[0];
