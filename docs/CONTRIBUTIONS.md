@@ -33,7 +33,28 @@ are the evidence, and `git log` / `git shortlog -sne` confirm them.
 - Built the Python embedding service and the Docker Compose environment.
 - Wrote the unit tests in `tests/calculation.test.mjs` and the initial documentation.
 
-**Commit:** `d9f4d14` — *Initial SlabSplit project*
+**Verification and hardening pass**
+- Built the database-backed integration suite (`tests/integration/workflows.test.mjs`)
+  and ran every account and billing workflow against a live database: 12 of 12
+  integration scenarios and 12 of 12 unit tests pass. Method and results are in
+  `docs/REPAIR_VERIFICATION.md`.
+- Captured the application screenshots from a running instance (`docs/screenshots/`)
+  and wrote the viva notes on locking and receipt storage
+  (`docs/VIVA_LOCKS_AND_RECEIPTS.md`).
+- Replaced email-only occupant linking with a **signed, expiring admin invitation**
+  (`lib/invitations.js`). Matching an email alone had let anyone who knew a flatmate's
+  address claim their membership.
+- Serialised all financial mutations behind a transaction advisory lock; completed
+  transfers now freeze their source records, and closed cycles refuse financial writes.
+- Moved receipts to private storage with signature validation and an authorised download
+  route (`lib/receipts.js`, `app/api/receipts/file`).
+- Switched allocation to integer largest-remainder rounding (`lib/calculation.js`).
+- Added a contract test pinning `database/schema.sql` and the SQL files by hash, so the
+  submitted schema cannot drift silently, and a one-command `npm run demo` startup.
+
+**Commits:** `d9f4d14` — *Initial SlabSplit project*; `916e79e` — *Fix accounting
+workflows, secure registration and receipts, and simplify startup*; `af67d2e` — *Add
+verified demo screenshots and viva explanations*
 
 ## Member A — Dhanush — database design artifacts, tuning and account management
 

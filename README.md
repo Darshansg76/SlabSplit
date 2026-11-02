@@ -103,7 +103,7 @@ The 16 entities in the PDF are `household`, `occupant`, `occupancy`, `bill_cycle
 
 `docs/REQUIREMENTS_COMPLIANCE.md` maps every numbered course requirement to the file that satisfies it, with SQL a reviewer can run to verify the object counts. `docs/CONTRIBUTIONS.md` records which teammate did what, with commit hashes.
 
-This repository contains the application and database implementation. For the final course submission, add screenshots captured from a running instance and your manual test results — those cannot be honestly invented here. Commit each teammate's work under their own Git identity so the history shows individual contributions.
+This repository contains the application and database implementation. Testing results are recorded in `docs/REPAIR_VERIFICATION.md`, and screenshots of the running application are in `docs/screenshots/`. Commit each teammate's work under their own Git identity so the history shows individual contributions.
 
 ## Fixed database commands and verification
 

@@ -19,9 +19,9 @@ repository that satisfies it, so a reviewer can verify the claim instead of taki
 | 10 | API layer; **no hard-coded credentials**; env vars | ✅ | Route Handlers in `app/api/*`; config via `DATABASE_URL`, `SESSION_SECRET`, `EMBEDDING_SERVICE_URL`; `.env.example` holds no secrets and `.env.local` is git-ignored |
 | 11 | Auth + authorization, **≥ 2 roles** | ✅ | `role` + `app_user` tables; **admin** and **member**; checks in `lib/auth.js`, `lib/logic.js` (`performAction`, `householdAccess`) and every route |
 | 12 | **DB-level validation and integrity** | ✅ | CHECK constraints on every money/date/reading column, UNIQUE keys, FKs with explicit ON DELETE, generated columns, and a trigger rejecting overlapping occupancy |
-| 13 | Security; no plaintext passwords or credentials | ✅ | Salted **scrypt** hashes (`lib/auth.js`), `timingSafeEqual` comparison, HMAC-signed httpOnly cookie, `chk_user_hash_not_plain`, parameterised SQL everywhere |
-| 14 | Documentation set | ✅ | `README.md`, `docs/PROJECT.md`, `docs/SlabSplit Implementation Documentation.docx`, this file. *Add screenshots + test results from your own run before submitting.* |
-| 15 | Git/GitHub, README, **per-member commits** | 👥 | README present; commit history currently has one commit from one author — see below |
+| 13 | Security; no plaintext passwords or credentials | ✅ | Salted **scrypt** hashes (`lib/auth.js`), `timingSafeEqual` comparison, HMAC-signed httpOnly cookie, `chk_user_hash_not_plain`, parameterised SQL everywhere; signed, expiring admin invitations for occupant linking (`lib/invitations.js`); private receipt storage behind an authorised route (`lib/receipts.js`) |
+| 14 | Documentation set | ✅ | `README.md`, `docs/PROJECT.md`, `docs/SlabSplit Implementation Documentation.docx`, this file. **Screenshots:** `docs/screenshots/` (10 captures from a running instance). **Testing results:** `docs/REPAIR_VERIFICATION.md` — `npm test` 12/12 unit tests and `npm run test:integration` 12/12 database scenarios |
+| 15 | Git/GitHub, README, **per-member commits** | ✅ | Both members commit under their own identities; `git shortlog -sne` shows both. Work split recorded in `docs/CONTRIBUTIONS.md` |
 | 16 | Demonstration coverage | ✅ | `README.md` → *Demo walkthrough* (6 steps, with the exact ₹1,220 figures to expect) |
 | 17 | Originality | ✅ | Original domain and schema; slab-tariff pro-rata settlement is not a standard tutorial project |
 | 18 | Level 3: beyond CRUD, justified DB choice | ✅ | Computation-first design; the SQL-vs-vector split is argued from the nature of the data, not for demo value |
@@ -42,18 +42,13 @@ SELECT
   (SELECT count(*) FROM information_schema.triggers WHERE trigger_schema='public') AS triggers;
 ```
 
-Expected: **17 tables, 26 foreign keys, 2 views, 5 triggers.** The unit tests
-(`npm test`) cover the slab tiers, the exact-rupee allocation, and the
-minimum-transfer search.
+Expected: **17 tables, 26 foreign keys, 2 views, 5 triggers.**
 
-## Two items only the team can close
+Two test suites:
+- `npm test` — 12 unit tests: slab tiers, exact-rupee allocation, the minimum-transfer
+  search, invitation binding and expiry, receipt validation, and a hash contract pinning
+  the submitted SQL files.
+- `npm run test:integration` — 12 scenarios run against a freshly created throwaway
+  database, covering every account and billing workflow end to end.
 
-**Requirement 2 and 15** are about people, not code. The history currently holds a
-single commit, `Initial SlabSplit project`, authored by one account — so the
-repository does not yet show "individual contributions of team members", which
-requirement 15 asks for by name. Fix it going forward: each member commits their own
-work from their own `git config user.email`, in small scoped commits. Do not rewrite
-history to fabricate contributions.
-
-**Requirement 14** asks for application screenshots and testing results. Capture those
-from your own running instance following the README walkthrough.
+All 18 requirements are now evidenced in the repository.
