@@ -84,8 +84,9 @@ def poly(pts):
     d=' '.join(f'{x:.0f},{y:.0f}' for x,y in pts)
     s.append(f'<polyline points="{d}" fill="none" stroke="{EDGE}" stroke-width="2" stroke-linejoin="round"/>')
 def crowsfoot(x,y):
+    """Many-side marker: the three prongs touch the table and meet on the line."""
     L,sp=20,11
-    line(x,y,x-L,y-sp); line(x,y,x-L,y); line(x,y,x-L,y+sp)
+    line(x-L,y,x,y-sp); line(x-L,y,x,y); line(x-L,y,x,y+sp)
 def onebar(x,y,zero=False):
     line(x+12,y-11,x+12,y+11,2.2)
     if zero: s.append(f'<circle cx="{x+26:.0f}" cy="{y:.0f}" r="7" fill="{BG}" stroke="{EDGE}" stroke-width="2"/>')
