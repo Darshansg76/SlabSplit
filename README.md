@@ -99,7 +99,11 @@ The 16 entities in the PDF are `household`, `occupant`, `occupancy`, `bill_cycle
   ```
   python scripts/build_schema_diagram.py database/schema.sql docs/diagrams/slabsplit_relational.svg
   ```
-- **ER diagram:** the Mermaid diagram in `docs/PROJECT.md`, which GitHub renders inline and which already includes `bill_share`.
+- **ER diagram:** `docs/diagrams/slabsplit_er.svg` (and `.png`) — all 17 entities and 26 relationships in crow's-foot notation, with each relationship named. Generated from `database/schema.sql` by `scripts/build_er_diagram.py`:
+  ```
+  python scripts/build_er_diagram.py database/schema.sql docs/diagrams/slabsplit_er.svg
+  ```
+  The same model is also drawn as a Mermaid diagram in `docs/PROJECT.md`, which GitHub renders inline.
 
 `docs/REQUIREMENTS_COMPLIANCE.md` maps every numbered course requirement to the file that satisfies it, with SQL a reviewer can run to verify the object counts. `docs/CONTRIBUTIONS.md` records which teammate did what, with commit hashes.
 
