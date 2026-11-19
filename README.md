@@ -2,14 +2,14 @@
 
 SlabSplit calculates fair utility and shared expense shares for flatmates who may move in or out during a billing cycle. It is a two-role Next.js and PostgreSQL project based on the supplied mini-project design. The base demo supports the complete calculation path and keeps the PDF's original entities, with one additional `bill_share` table to record utility allocations.
 
-The Word guide at `docs/SlabSplit Implementation Documentation.docx` explains the requirements mapping, database tables, calculations, interface, setup and verified test results in student-friendly language.
+The [final project report (PDF)](SlabSplit%20Project%20Report.pdf) covers the design, SQL commands, application screenshots, demo results, and evaluation rubric. The [updated ER diagram (PDF)](docs/diagrams/er.pdf) is also available separately.
 
 ## Stack and database choice
 
 - **Next.js** provides the web interface and Route Handler API.
 - **PostgreSQL** stores households, occupants, occupancy periods, tariffs, cycles, bills, expenses, payments, receipts, roles, and audit records in related tables with constraints and transactions.
-- **pgvector** stores 384-dimensional embeddings for expense descriptions and receipt text. A small local Python service uses `all-MiniLM-L6-v2` to produce normalized vectors; cosine distance (`<=>`) retrieves similar records. This is useful for searching loosely worded receipts and descriptions, while PostgreSQL full-text search handles exact terms.
-- The database uses a trigger, a function, views, indexes, GIN full-text search, an HNSW vector index, and transactions. Passwords use salted scrypt hashes; the session cookie is signed and HTTP-only.
+- **pgvector** stores 384-dimensional embeddings for expense descriptions and receipt text. A small local Python service uses `all-MiniLM-L6-v2` to produce normalized vectors; cosine distance (`<=>`) retrieves similar records. This supports searches by meaning, while PostgreSQL full-text search matches terms in expense descriptions. To make a receipt searchable, enter its text and index it in the app.
+- The database uses transactions, two views, three functions, five triggers, and indexes for relational queries, full-text search (GIN), and vector search (HNSW). Passwords use salted scrypt hashes; the session cookie is signed and HTTP-only.
 
 ## Setup
 
@@ -49,7 +49,7 @@ another port. Keep the terminal open. Ctrl+C stops the website (answer Y if Wind
 asks to terminate the npm batch job); `docker compose
 stop` stops this project's containers while preserving the database volume.
 
-Sign in as `admin` or `asha` with the passwords already configured in `.env.local`.
+Sign in as `admin` or `asha`. The first seed uses the demo passwords from `.env.local`. An existing database keeps the passwords already set for its accounts.
 To start just the supporting services for verification, use
 `npm.cmd run demo -- --services-only`.
 
@@ -57,20 +57,20 @@ The Compose database password remains an existing local-demo value. Ports `55432
 and `8001` are published on the host without an explicit localhost bind in the
 existing Compose file; use this setup only on a trusted development laptop.
 
-The Compose database initializes `database/schema.sql` only when its data volume is new. For an existing local database, run the schema with `psql -f database/schema.sql` on an empty database. `database/queries.sql` contains showcase queries, and `database/ddl_demo.sql` demonstrates reversible ALTER and DROP commands.
+The Compose database initializes `database/schema.sql` only when its data volume is new. For a separate PostgreSQL setup, apply `database/schema.sql` to an empty database with pgvector available. `database/queries.sql` contains showcase queries, and `database/ddl_demo.sql` demonstrates reversible ALTER and DROP commands.
 
 On a Windows machine where the native Next.js SWC compiler cannot load, set `NEXT_TEST_WASM_DIR` to the absolute path of `node_modules/@next/swc-wasm-nodejs` and set `NEXT_IGNORE_INCORRECT_LOCKFILE=1` before `npm run build`. This project includes the WebAssembly package for that fallback.
 
 ## Demo walkthrough
 
-The seed has an October 2026 cycle, three occupants (Mira moves in on October 16), and electricity slabs of 0–100 units at ₹4, 100–200 at ₹6, and above 200 at ₹8, plus a ₹60 fixed charge.
+Sign in as `admin` and select **Demo Flat → October 2026**. A fresh setup seeds the flat, three occupants, and electricity slabs of 0–100 units at ₹4, 100–200 at ₹6, and above 200 at ₹8, plus a ₹60 fixed charge. Mira moves in on October 16. The bill, expenses, and settlements are created during the walkthrough. The completed **Report Demo Flat** shown in the report was prepared separately for the screenshots.
 
 1. In **Bills & rates**, generate an electricity bill with previous reading `1000` and current reading `1220`. It should charge ₹400 + ₹600 + ₹160 + ₹60 = **₹1,220**. The shares use 31, 31, and 16 occupied days, so Asha and Dev each owe ₹484.87 and Mira owes ₹250.26.
 2. Record one or more bill payments totaling ₹1,220. Payments cannot exceed the unpaid bill balance.
 3. In **Expenses & receipts**, add a shared expense and choose its payer. A one-off expense splits among people present on its date. A recurring expense uses occupied days across the cycle; rent additionally uses `rent_weight`.
    An occupant may record a reimbursement to the original payer; it reduces their outstanding share and the payer's credit.
 4. In **Settlements**, generate suggested transfers. The app nets allocations and payments into transfers between debtors and creditors. It requires full bill payment first. Mark transfers settled when paid.
-5. Upload a receipt PDF or image (up to 5 MB), optionally enter its text, and index it. Index expenses too. Compare full-text and semantic search in **Search & audit**.
+5. Upload a receipt PDF or image (up to 5 MB). For semantic search, enter receipt text before clicking **Index**. You can also index expenses. Compare full-text search for expense keywords with semantic search in **Search & audit**.
 6. Open **Reports** to demonstrate grouped expense totals, occupied days, and expenses above the average. These show JOIN, GROUP BY, HAVING, ORDER BY, aggregates, and a subquery in the running interface.
 
 ## Database and domain rules
@@ -91,19 +91,17 @@ The seed has an October 2026 cycle, three occupants (Mira moves in on October 16
 
 ## Schema and deliverables
 
-The 16 entities in the PDF are `household`, `occupant`, `occupancy`, `bill_cycle`, `slab_rate`, `bill`, `bill_slab_breakdown`, `expense`, `expense_share`, `payment`, `settlement`, `role`, `app_user`, `receipt`, `doc_embedding`, and `audit_log`. The PDF's `CREATE EXTENSION vector` is retained, and `bill_share` is added for persisted utility allocation. Primary and foreign keys, checks, unique constraints, and indexes are in `database/schema.sql`.
+The [original project design PDF](DBMS%20Mini%20Project.pdf) defines 16 entities: `household`, `occupant`, `occupancy`, `bill_cycle`, `slab_rate`, `bill`, `bill_slab_breakdown`, `expense`, `expense_share`, `payment`, `settlement`, `role`, `app_user`, `receipt`, `doc_embedding`, and `audit_log`. The implementation enables pgvector and adds `bill_share` to store each person’s utility allocation. Primary and foreign keys, checks, unique constraints, and indexes are in `database/schema.sql`.
 
 ### Diagrams
 
-- **Relational schema:** `docs/diagrams/slabsplit_relational.svg` (and `.png`) — all 17 tables and 26 foreign keys in crow's-foot notation, including `bill_share`. It is generated by `scripts/build_schema_diagram.py` directly from `database/schema.sql`, so the picture cannot drift from the DDL. Regenerate after any schema change:
+- [**Chen ER diagram (PDF)**](docs/diagrams/er.pdf) — entities, attributes, underlined keys, and relationship cardinalities. [Project documentation](docs/PROJECT.md) also includes a Mermaid diagram.
+- **Relational schema:** [SVG](docs/diagrams/slabsplit_relational.svg) or [PNG](docs/diagrams/slabsplit_relational.png). Shows 17 tables and 26 foreign keys, including `bill_share`. Regenerate it from `database/schema.sql` after a schema change:
   ```
   python scripts/build_schema_diagram.py database/schema.sql docs/diagrams/slabsplit_relational.svg
   ```
-- **ER diagram:** `docs/diagrams/slabsplit_er.svg` (and `.png`) — Chen notation: all 17 entities as rectangles, 26 relationships as diamonds with cardinality, and attributes as ellipses with primary keys underlined. The same model is also drawn as a Mermaid diagram in `docs/PROJECT.md`, which GitHub renders inline.
 
-`docs/REQUIREMENTS_COMPLIANCE.md` maps every numbered course requirement to the file that satisfies it, with SQL a reviewer can run to verify the object counts. `docs/CONTRIBUTIONS.md` records which teammate did what, with commit hashes.
-
-This repository contains the application and database implementation. Testing results are recorded in `docs/REPAIR_VERIFICATION.md`, and screenshots of the running application are in `docs/screenshots/`. Commit each teammate's work under their own Git identity so the history shows individual contributions.
+See the [course requirements checklist](docs/REQUIREMENTS_COMPLIANCE.md), [team contributions](docs/CONTRIBUTIONS.md), [test results](docs/REPAIR_VERIFICATION.md), and [demo screenshots](docs/screenshots/README.md).
 
 ## Fixed database commands and verification
 
